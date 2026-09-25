@@ -1,0 +1,70 @@
+services:
+  mongo:
+    image: mongo:8.3.8
+    restart: always
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    networks:
+      - system_network
+
+  mongodb-exporter:
+    image: percona/mongodb_exporter:0.43
+    restart: always
+    container_name: mongodb-exporter
+    depends_on:
+      - mongo
+    command:
+      - "--mongodb.uri=mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:27017/admin"
+      - "--collect-all"
+    networks:
+      - system_network
+
+  express:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    restart: always
+    container_name: expressapp
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+    environment:
+      MONGO_USERNAME: ${MONGO_USERNAME}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_HOST: mongo
+      MONGO_PORT: ${MONGO_PORT}
+      MONGO_DB: ${MONGO_DB}
+    networks:
+      - system_network
+  
+  prometheus:
+    image: ubuntu/prometheus:3.11-26.04_stable
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - system_network
+  
+  grafana:
+    image: grafana/grafana:nightly
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./monitoring/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - system_network
+
+networks:
+  system_network:
+    driver: bridge
+
+volumes:
+  grafana-storage: {}
