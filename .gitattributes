@@ -1,0 +1,26 @@
+# Normalize text files to LF in the repository and in the working tree.
+* text=auto eol=lf
+
+# Shell scripts must keep LF endings: bash cannot parse a "#!/bin/bash\r" shebang.
+*.sh text eol=lf
+
+# Keep Docker and config files as plain LF text.
+Dockerfile text eol=lf
+docker-compose.yml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.js text eol=lf
+*.md text eol=lf
+.gitignore text eol=lf
+.dockerignore text eol=lf
+
+# Never rewrite binary files.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.tar binary
+*.gz binary
